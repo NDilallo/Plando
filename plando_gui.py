@@ -1,10 +1,11 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog
+from tkinter import Frame, messagebox, filedialog
 import shutil
 import os
 from enum import Enum
 import SubmitInputs
 import UpdateSeed
+from tkinter import *
 
 dungeon_options = [
     "Deku Tree",
@@ -30,6 +31,7 @@ boss_options = [
     "Bongo Bongo",
     "Twinrova"
 ]
+
 
 index_pairs = list()
 
@@ -57,6 +59,16 @@ def create_row(root, text, selection_type):
 
     # Store user selections
     user_selections[text] = dropdown
+
+def create_text_input_row(root, text):
+    frame = tk.Frame(root, bg="white")
+    frame.pack(padx=10, pady=5, fill="x")
+    
+    label = tk.Label(frame, text=f"{text}:", width=15, anchor="w")
+    label.pack(side="left")
+    
+    entry = tk.Entry(frame)
+    entry.pack(side="left", padx=5)
 
 
 def upload_file():
@@ -102,9 +114,27 @@ root = tk.Tk()
 root.title("Plando Setup Locations")
 root.configure(bg="lightgray")  # Set a light gray background
 
+# Scrollbar stuff
+main_frame = Frame(root)
+main_frame.pack(fill=BOTH, expand=1)
+
+my_canvas = Canvas(main_frame)
+my_canvas.pack(side=LEFT, fill=BOTH, expand=1)
+
+my_scrollbar = tk.Scrollbar(main_frame, orient=VERTICAL, command=my_canvas.yview)
+my_scrollbar.pack(side=RIGHT, fill=Y)
+
+my_canvas.configure(yscrollcommand=my_scrollbar.set)
+my_canvas.bind('<Configure>', lambda e: my_canvas.configure(scrollregion=my_canvas.bbox("all")))
+
+second_frame = Frame(my_canvas)
+
+my_canvas.create_window((0,0), window=second_frame, anchor="nw")
+
+
 # Title label - Dungeon Entrances
 title_label = tk.Label(
-    root, text="Dungeon Entrances", font=("Arial", 14, "bold"), bg="lightgray"
+    second_frame, text="Dungeon Entrances", font=("Arial", 14, "bold"), bg="lightgray"
 )
 title_label.pack()
 
@@ -122,11 +152,20 @@ texts_dungeon = [
     "Gerudo Training Grounds",
     "Spirit",
 ]
+texts_warp_songs = [
+    "Minuet of Forest",
+    "Bolero of Fire",
+    "Serenade of Water",
+    "Nocturne of Shadow",
+    "Requiem of Spirit",
+    "Prelude of Light",
+]
+
 for text in texts_dungeon:
-    create_row(root, text, SelectionType.DUNGEON)
+    create_row(second_frame, text, SelectionType.DUNGEON)
 
 # Add space between sections
-spacer_label = tk.Label(root, text="")  # Empty label for space
+spacer_label = tk.Label(second_frame, text="")  # Empty label for space
 spacer_label.pack()
 
 # Create multiple rows - Boss Entrances
@@ -134,27 +173,34 @@ for text in texts_dungeon:
     if text in ["Ice Cavern", "Bottom of the Well", "Gerudo Training Grounds"]:
         continue
     text = text + " Boss"
-    create_row(root, text, SelectionType.BOSS)
+    create_row(second_frame, text, SelectionType.BOSS)
 
 
 # Add space between sections
-spacer_label = tk.Label(root, text="")  # Empty label for space
+spacer_label = tk.Label(second_frame, text="")  # Empty label for space
 spacer_label.pack()
 
+# Create multiple rows - Warp Songs
+for text in texts_warp_songs:
+    create_text_input_row(second_frame, text)
+
+# Add space between sections
+spacer_label = tk.Label(second_frame, text="")  # Empty label for space
+spacer_label.pack()
 
 # File upload button
 upload_button = tk.Button(
-    root, text="Upload File", command=upload_file, bg="orange", fg="white"
+    second_frame, text="Upload File", command=upload_file, bg="orange", fg="white"
 )
 upload_button.pack(pady=10)
 
 # Add space between sections
-spacer_label = tk.Label(root, text="", bg="lightgray")
+spacer_label = tk.Label(second_frame, text="", bg="lightgray")
 spacer_label.pack()
 
 # Submit button
 submit_button = tk.Button(
-    root, text="Submit", command=submit_data, bg="skyblue", fg="white"
+    second_frame, text="Submit", command=submit_data, bg="skyblue", fg="white"
 )
 submit_button.pack(pady=10)
 
