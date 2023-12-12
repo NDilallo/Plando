@@ -1,9 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
-import CreateSeed
 import shutil
 import os
 from enum import Enum
+import SubmitInputs
+import UpdateSeed
 
 dungeon_options = [
     "Deku Tree",
@@ -30,6 +31,8 @@ boss_options = [
     "Twinrova"
 ]
 
+index_pairs = list()
+
 class SelectionType(Enum):
     DUNGEON = dungeon_options
     BOSS = boss_options
@@ -38,7 +41,6 @@ class SelectionType(Enum):
 
 # Dictionary to store user selections
 user_selections = {}
-user_boss_selections = {}
 
 
 def create_row(root, text, selection_type):
@@ -54,10 +56,7 @@ def create_row(root, text, selection_type):
     dropdown_menu.pack(side="left", padx=5)
 
     # Store user selections
-    if selection_type == SelectionType.DUNGEON:
-        user_selections[text] = dropdown
-    elif selection_type == SelectionType.BOSS:
-        user_boss_selections[text] = dropdown
+    user_selections[text] = dropdown
 
 
 def upload_file():
@@ -72,29 +71,25 @@ def upload_file():
 
 def submit_data():
     # Check for "None Selected" values
-    if "None Selected" in ([dropdown.get() for dropdown in user_selections.values()] + [dropdown.get() for dropdown in user_boss_selections.values()]):
+    if "None Selected" in [dropdown.get() for dropdown in user_selections.values()]:
         messagebox.showerror("Error", "Please make a selection for all entries!")
     else:
         # Create a dictionary with user selections
         dungeon_selections = {
             text: dropdown.get() for text, dropdown in user_selections.items()
         }
-        boss_selections = {
-            text: dropdown.get() for text, dropdown in user_boss_selections.items()
-        }
         # Check for duplicate values
         unique_dungeon_values = set(dungeon_selections.values())
-        unique_boss_values = set(boss_selections.values())
-        if len(unique_dungeon_values) != len(dungeon_selections) or len(unique_boss_values) != len(boss_selections):
+        # unique_boss_values = set(boss_selections.values())
+        if len(unique_dungeon_values) != len(dungeon_selections):
             messagebox.showerror(
                 "Error", "Please select unique values for all entries!"
             )
         else:
             try:
-                print(dungeon_selections)
-                print(boss_selections)
-                CreateSeed.create_seed(dungeon_selections)
-                CreateSeed.create_seed_bosses(boss_selections)
+                translated_index_pairs = SubmitInputs.submit_inputs(dungeon_selections)
+                index_pairs.extend(translated_index_pairs)
+                UpdateSeed.updateSeed(index_pairs)
                 messagebox.showinfo("Success", "Seed created successfully!")
             except:
                 messagebox.showerror(
@@ -165,31 +160,3 @@ submit_button.pack(pady=10)
 
 
 root.mainloop()
-
-
-# # Add space between sections
-# spacer_label = tk.Label(root, text="")  # Empty label for space
-# spacer_label.pack()
-
-# # Title label - Warp Songs
-# title_label_boss = tk.Label(root, text="Warp Songs")
-# title_label_boss.pack()
-
-# # Create multiple rows - Boss Entrances
-# texts_boss = ["Minuet of Forest", "Bolero of Fire", "Serenade of Water", "Nocturne of Shadow", "Requiem of Spirit", "Prelude of Light"]
-# for text in texts_boss:
-#     create_row(root, text)
-
-# # Add space between sections
-# spacer_label = tk.Label(root, text="")  # Empty label for space
-# spacer_label.pack()
-
-
-# # Title label - Owls
-# title_label_boss = tk.Label(root, text="Owls")
-# title_label_boss.pack()
-
-# # Create multiple rows - Owls
-# texts_boss = ["Death Mountain Trail", "Lake Hylia"]
-# for text in texts_boss:
-#     create_row(root, text)
