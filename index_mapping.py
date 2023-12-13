@@ -59,3 +59,12 @@ exits = {
     "Shadow Boss": 694,
     "Spirit Boss": 757
 }
+
+warp_songs = {
+    "Minuet of Forest": 1536,
+    "Bolero of Fire": 1270,
+    "Serenade of Water": 1540,
+    "Nocturne of Shadow": 1384,
+    "Requiem of Spirit": 497,
+    "Prelude of Light": 1524
+}

@@ -43,6 +43,8 @@ class SelectionType(Enum):
 
 # Dictionary to store user selections
 user_selections = {}
+user_song_selections = {}
+custom_swap_selections = ()
 
 
 def create_row(root, text, selection_type):
@@ -70,6 +72,32 @@ def create_text_input_row(root, text):
     entry = tk.Entry(frame)
     entry.pack(side="left", padx=5)
 
+    user_song_selections[text] = entry
+
+def create_index_swap(root):
+    global custom_swap_selections  # Declare as global
+
+    frame = tk.Frame(root, bg="white")
+    frame.pack(padx=10, pady=5)
+
+    entry1 = tk.Entry(frame)
+    entry1.grid(row=0, column=0, padx=5, sticky="ns")
+
+    label = tk.Label(frame, text="--->", anchor="w")
+    label.grid(row=0, column=1, sticky="ns")
+
+    entry2 = tk.Entry(frame)
+    entry2.grid(row=0, column=2, padx=5, sticky="ns")
+
+    # Adjusting row weights to center vertically
+    frame.grid_rowconfigure(0, weight=1)
+
+    custom_swap_selections = (entry1, entry2)
+    
+    enter_swap_button = tk.Button(
+    second_frame, text="Swap", command=swap_indexes, bg="skyblue", fg="white")
+    enter_swap_button.pack(pady=10)
+
 
 def upload_file():
     file_path = filedialog.askopenfilename()  # Open file dialog to select a file
@@ -80,16 +108,35 @@ def upload_file():
         shutil.copy(file_path, destination_folder)
         messagebox.showinfo("Success", f"File {file_path} uploaded successfully")
 
+def swap_indexes():
+    global custom_swap_selections
+    if custom_swap_selections[0].get() == "" or custom_swap_selections[1].get() == "":
+        messagebox.showerror("Error", "Please Enter a Hex Value into both Boxes")
+    elif not custom_swap_selections[0].get().isalnum() or not custom_swap_selections[1].get().isalnum():
+        messagebox.showerror("Error", "Indexes should be alphanumeric, no special symbols! - Hex entries")
+    else:
+        index_pairs.append((int(custom_swap_selections[0].get(), 16), -1, int(custom_swap_selections[1].get(), 16), -1))
+        custom_swap_selections[0].delete(0, tk.END)
+        custom_swap_selections[1].delete(0, tk.END)
 
 def submit_data():
     # Check for "None Selected" values
-    if "None Selected" in [dropdown.get() for dropdown in user_selections.values()]:
+    if "None Selected" in [dropdown.get() for dropdown in user_selections.values()] or None in [entry.get() for entry in user_song_selections.values()]:
         messagebox.showerror("Error", "Please make a selection for all entries!")
     else:
         # Create a dictionary with user selections
         dungeon_selections = {
             text: dropdown.get() for text, dropdown in user_selections.items()
         }
+
+        warp_song_selections = {}
+        for text, entry in user_song_selections.items():
+            if not entry.get().isalnum():
+                messagebox.showerror("Error", "Indexes should be alphanumeric, no special symbols! - Hex entries")
+                break  # Stop processing further if there's an error
+            else:
+                warp_song_selections[text] = entry.get()
+
         # Check for duplicate values
         unique_dungeon_values = set(dungeon_selections.values())
         # unique_boss_values = set(boss_selections.values())
@@ -99,7 +146,9 @@ def submit_data():
             )
         else:
             try:
-                translated_index_pairs = SubmitInputs.submit_inputs(dungeon_selections)
+                translated_index_pairs = SubmitInputs.submit_inputs_dungeons_bosses(dungeon_selections)
+                index_pairs.extend(translated_index_pairs)
+                translated_index_pairs = SubmitInputs.submit_inputs_warp_songs(warp_song_selections)
                 index_pairs.extend(translated_index_pairs)
                 UpdateSeed.updateSeed(index_pairs)
                 messagebox.showinfo("Success", "Seed created successfully!")
@@ -168,6 +217,12 @@ for text in texts_dungeon:
 spacer_label = tk.Label(second_frame, text="")  # Empty label for space
 spacer_label.pack()
 
+# Title label - Boss Entrances
+title_label = tk.Label(
+    second_frame, text="Boss Entrances", font=("Arial", 14, "bold"), bg="lightgray"
+)
+title_label.pack()
+
 # Create multiple rows - Boss Entrances
 for text in texts_dungeon:
     if text in ["Ice Cavern", "Bottom of the Well", "Gerudo Training Grounds"]:
@@ -180,9 +235,38 @@ for text in texts_dungeon:
 spacer_label = tk.Label(second_frame, text="")  # Empty label for space
 spacer_label.pack()
 
+# Title label - Warp Songs
+title_label = tk.Label(
+    second_frame, text="Warp Songs", font=("Arial", 14, "bold"), bg="lightgray"
+)
+title_label.pack()
+# Subtext label - Warp Songs
+title_label = tk.Label(
+    second_frame, text="Enter Destination's Hex Value", font=("Arial", 8, "bold"), bg="lightgray"
+)
+title_label.pack()
+
 # Create multiple rows - Warp Songs
 for text in texts_warp_songs:
     create_text_input_row(second_frame, text)
+
+# Add space between sections
+spacer_label = tk.Label(second_frame, text="")  # Empty label for space
+spacer_label.pack()
+
+# Title label - Custom Index Swaps
+title_label = tk.Label(
+    second_frame, text="Index Swap", font=("Arial", 14, "bold"), bg="lightgray"
+)
+title_label.pack()
+# Subtext label - Custom Index Swaps
+title_label = tk.Label(
+    second_frame, text="Swap any entrance (left) with any other (or same) entrance (right)\nNOTE: You must have overworld entrance randomizer enabled for this to work!", font=("Arial", 8, "bold"), bg="lightgray"
+)
+title_label.pack()
+
+# Create index swap section
+create_index_swap(second_frame)
 
 # Add space between sections
 spacer_label = tk.Label(second_frame, text="")  # Empty label for space
@@ -200,7 +284,7 @@ spacer_label.pack()
 
 # Submit button
 submit_button = tk.Button(
-    second_frame, text="Submit", command=submit_data, bg="skyblue", fg="white"
+    second_frame, text="Submit", command=submit_data, bg="green", fg="white"
 )
 submit_button.pack(pady=10)
 
