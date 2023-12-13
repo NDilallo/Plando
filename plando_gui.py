@@ -36,6 +36,7 @@ curr_text_input_row = 0
 curr_row = 0
 
 index_pairs = list()
+name_of_file = ""
 
 class SelectionType(Enum):
     DUNGEON = dungeon_options
@@ -123,9 +124,13 @@ def create_index_swap(root):
 
 
 def upload_file():
+    global name_of_file
     file_path = filedialog.askopenfilename()  # Open file dialog to select a file
     # Check if a file is selected
     if file_path:
+        # Extract the filename from the file path
+        file_name = os.path.basename(file_path)
+        name_of_file = file_name
         # Copy the selected file to a certain directory (e.g., 'destination_folder')
         destination_folder = os.getcwd()  # Replace with your desired directory
         shutil.copy(file_path, destination_folder)
@@ -145,6 +150,7 @@ def swap_indexes():
         custom_swap_selections[3].delete(0, tk.END)
 
 def submit_data():
+    global name_of_file
     # Check for "None Selected" values
     if "None Selected" in [dropdown.get() for dropdown in user_selections.values()] or None in [entry.get() for entry in user_song_selections.values()]:
         messagebox.showerror("Error", "Please make a selection for all entries!")
@@ -175,7 +181,7 @@ def submit_data():
                 index_pairs.extend(translated_index_pairs)
                 translated_index_pairs = SubmitInputs.submit_inputs_warp_songs(warp_song_selections)
                 index_pairs.extend(translated_index_pairs)
-                UpdateSeed.updateSeed(index_pairs)
+                UpdateSeed.updateSeed(index_pairs, name_of_file)
                 messagebox.showinfo("Success", "Seed created successfully!")
             except:
                 messagebox.showerror(

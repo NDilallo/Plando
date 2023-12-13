@@ -2,8 +2,8 @@ import json
 
 
 # Takes a list of index pairs and connects each pair - 2 Way entrances only - i.e. going through a zone then going back takes you back where you were
-def updateSeed(indexMaps: list) -> None:
-    with open("seed.json", "r+") as file:
+def updateSeed(indexMaps: list, filename: str) -> None:
+    with open(filename, "r+") as file:
         jsonData = json.load(file)
         entrances = jsonData.get("entrances")
         
