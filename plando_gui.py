@@ -32,6 +32,8 @@ boss_options = [
     "Twinrova"
 ]
 
+curr_text_input_row = 0
+curr_row = 0
 
 index_pairs = list()
 
@@ -47,52 +49,73 @@ user_song_selections = {}
 custom_swap_selections = ()
 
 
-def create_row(root, text, selection_type):
-    frame = tk.Frame(root, bg="white")  # Add a white background
-    frame.pack(padx=10, pady=5, fill="x")  # Add padding
+def create_row(root, text, selection_type, texts_dungeon):
+    global curr_row
+    frame = tk.Frame(root)
+    frame.pack(padx=10, pady=5)
 
-    label = tk.Label(frame, text=f"{text}:", width=15, anchor="w")
-    label.pack(side="left")
+    label = tk.Label(frame, text=f"{text}:", width=len(max(texts_dungeon, key=len)), anchor="e")  # Align text to the right
+    label.grid(row=curr_row, column=0, sticky='e')  # Sticky parameter to align to the east (right)
 
     dropdown = tk.StringVar(root)
     dropdown.set("None Selected")
     dropdown_menu = tk.OptionMenu(frame, dropdown, *selection_type.value)
-    dropdown_menu.pack(side="left", padx=5)
+    dropdown_menu.grid(row=curr_row, column=1)
+
+    curr_row += 1
 
     # Store user selections
     user_selections[text] = dropdown
 
-def create_text_input_row(root, text):
+
+def create_text_input_row(root, text, texts):
+    global curr_text_input_row
     frame = tk.Frame(root, bg="white")
-    frame.pack(padx=10, pady=5, fill="x")
+    frame.pack(padx=10, pady=5)
     
-    label = tk.Label(frame, text=f"{text}:", width=15, anchor="w")
-    label.pack(side="left")
+    label = tk.Label(frame, text=f"{text}:", width=len(max(texts, key=len)), anchor="w")
+    # label.pack(side="left")
+    label.grid(row=curr_text_input_row, column=0)
     
     entry = tk.Entry(frame)
-    entry.pack(side="left", padx=5)
+    # entry.pack(side="left", padx=5)
+    entry.grid(row=curr_text_input_row, column=1)
+
+    curr_text_input_row += 1
 
     user_song_selections[text] = entry
 
 def create_index_swap(root):
     global custom_swap_selections  # Declare as global
 
-    frame = tk.Frame(root, bg="white")
+    frame = tk.Frame(root)
     frame.pack(padx=10, pady=5)
 
-    entry1 = tk.Entry(frame)
-    entry1.grid(row=0, column=0, padx=5, sticky="ns")
+    label = tk.Label(frame, text="Entrance: ", anchor="w")
+    label.grid(row=0, column=0, sticky="ns")
+
+    entrance1 = tk.Entry(frame)
+    entrance1.grid(row=0, column=1, padx=5, sticky="ns")
 
     label = tk.Label(frame, text="--->", anchor="w")
-    label.grid(row=0, column=1, sticky="ns")
+    label.grid(row=0, column=2, sticky="ns")
 
-    entry2 = tk.Entry(frame)
-    entry2.grid(row=0, column=2, padx=5, sticky="ns")
+    entrance2 = tk.Entry(frame)
+    entrance2.grid(row=0, column=3, padx=5, sticky="ns")
+
+    label = tk.Label(frame, text="Exit: ", anchor="w")
+    label.grid(row=1, column=0, sticky="ns")
+
+    exit1 = tk.Entry(frame)
+    exit1.grid(row=1, column=1, padx=5, sticky="ns")
+
+    exit2 = tk.Entry(frame)
+    exit2.grid(row=1, column=3, padx=5, sticky="ns")
 
     # Adjusting row weights to center vertically
     frame.grid_rowconfigure(0, weight=1)
 
-    custom_swap_selections = (entry1, entry2)
+    custom_swap_selections = (entrance1, exit1, entrance2, exit2)
     
     enter_swap_button = tk.Button(
     second_frame, text="Swap", command=swap_indexes, bg="skyblue", fg="white")
@@ -115,9 +138,11 @@ def swap_indexes():
     elif not custom_swap_selections[0].get().isalnum() or not custom_swap_selections[1].get().isalnum():
         messagebox.showerror("Error", "Indexes should be alphanumeric, no special symbols! - Hex entries")
     else:
-        index_pairs.append((int(custom_swap_selections[0].get(), 16), -1, int(custom_swap_selections[1].get(), 16), -1))
+        index_pairs.append((int(custom_swap_selections[0].get(), 16), int(custom_swap_selections[1].get(), 16), int(custom_swap_selections[2].get(), 16), int(custom_swap_selections[3].get(), 16)))
         custom_swap_selections[0].delete(0, tk.END)
         custom_swap_selections[1].delete(0, tk.END)
+        custom_swap_selections[2].delete(0, tk.END)
+        custom_swap_selections[3].delete(0, tk.END)
 
 def submit_data():
     # Check for "None Selected" values
@@ -211,7 +236,7 @@ texts_warp_songs = [
 ]
 
 for text in texts_dungeon:
-    create_row(second_frame, text, SelectionType.DUNGEON)
+    create_row(second_frame, text, SelectionType.DUNGEON, texts_dungeon)
 
 # Add space between sections
 spacer_label = tk.Label(second_frame, text="")  # Empty label for space
@@ -228,7 +253,7 @@ for text in texts_dungeon:
     if text in ["Ice Cavern", "Bottom of the Well", "Gerudo Training Grounds"]:
         continue
     text = text + " Boss"
-    create_row(second_frame, text, SelectionType.BOSS)
+    create_row(second_frame, text, SelectionType.BOSS, texts_dungeon)
 
 
 # Add space between sections
@@ -248,7 +273,7 @@ title_label.pack()
 
 # Create multiple rows - Warp Songs
 for text in texts_warp_songs:
-    create_text_input_row(second_frame, text)
+    create_text_input_row(second_frame, text, texts_warp_songs)
 
 # Add space between sections
 spacer_label = tk.Label(second_frame, text="")  # Empty label for space
@@ -261,7 +286,7 @@ title_label = tk.Label(
 title_label.pack()
 # Subtext label - Custom Index Swaps
 title_label = tk.Label(
-    second_frame, text="Swap any entrance (left) with any other (or same) entrance (right)\nNOTE: You must have overworld entrance randomizer enabled for this to work!", font=("Arial", 8, "bold"), bg="lightgray"
+    second_frame, text="Optional: Swap any entrance (left) with any other (or same) entrance (right)\nNOTE: You must have overworld entrance randomizer enabled for this to work!", font=("Arial", 8, "bold"), bg="lightgray"
 )
 title_label.pack()
 
